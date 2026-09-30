@@ -1,0 +1,30 @@
+{
+ "name": "示例项目(请复制到自己的项目目录再改)",
+ "brand_title": "某某商场",
+ "number_whitelist": ["3折", "8折", "100", "200", "10月1日", "10月7日"],
+ "banned_words": ["最", "第一", "唯一", "顶级", "全网", "绝对", "史上"],
+ "banned_exceptions": [],
+ "spoken_numbers": [["3折", "三折"], ["8折", "八折"], ["10月1日", "十月一日"], ["10月7日", "十月七日"]],
+ "caption_words": ["某某商场"],
+ "draft_prefix": "demo_",
+ "asr_prompt": "以下是普通话的句子。",
+ "sources": [
+  {"name": "空镜", "path": "D:/素材/空镜", "pattern": "*.mp4", "keep_name": true},
+  {"name": "人物", "path": "D:/素材/人物", "pattern": "*.mp4", "keep_name": true}
+ ],
+ "batch": {
+  "music": {"S1": ["{project}/配乐/bgm1.m4a"], "S2": ["{project}/配乐/bgm1.m4a"], "S3": ["{project}/配乐/bgm2.m4a"],
+            "S4": ["{project}/配乐/bgm1.m4a"], "S5": ["{project}/配乐/bgm3.m4a"]},
+  "speakers": {"S1": ["zh_male_ad"], "S2": ["BV401_streaming"], "S3": ["ICL_zh_male_szrhejiaxing2_jianying"],
+               "S4": ["zh_male_iclvop_xssyhguanggao"], "S5": ["zh_male_huoli"]},
+  "speed": {"S1": 1.12, "S2": 1.2, "S3": 1.08, "S4": 1.12, "S5": 1.1},
+  "host_pool": [],
+  "host_clips": {"DAKA": [], "CAKE": [], "END": []},
+  "host_inserts": {},
+  "list_title": "来某某商场的{n}个理由",
+  "big_cards": {"disc": "3折起", "tuan": "100抵200", "cake": "", "end": "至10.7"},
+  "reasons": [],
+  "s3_big": {},
+  "s3_cats": {}
+ }
+}

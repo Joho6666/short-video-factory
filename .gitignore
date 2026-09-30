@@ -1,0 +1,21 @@
+# 环境 / 本机配置 / 密钥
+.venv/
+__pycache__/
+*.pyc
+config.json
+.env
+*.log
+pip.log
+# 项目数据一律不进仓库(素材、预览、成片、客户明白卡、配音缓存)
+projects/*
+!projects/example/
+projects/example/预览*/
+projects/example/成片/
+projects/example/数据/tts_cache*/
+*.mp4
+*.mov
+*.m4a
+*.wav
+*.ogg
+*.xlsx
+.claude/

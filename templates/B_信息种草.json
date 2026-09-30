@@ -1,0 +1,152 @@
+{
+ "name": "B_信息种草",
+ "source": "分析/别人成品.mp4",
+ "target_duration": [
+  30,
+  35
+ ],
+ "voice": {
+  "style": "广告播报",
+  "gap_between_lines": 0.25
+ },
+ "shot": {
+  "min": 0.9,
+  "max": 2.0,
+  "default_motion": "zoom_in_slow",
+  "motion_pool": [
+   "zoom_in_slow",
+   "zoom_out_slow",
+   "pan_left",
+   "pan_right"
+  ],
+  "zoom_amount": 0.08
+ },
+ "host_ratio": 0.2,
+ "host_rule": "只用拿商品/试穿/走动镜头,不用对镜说话镜头",
+ "structure": [
+  {
+   "slot": "hook",
+   "lines": 2,
+   "cats": [
+    "门店招牌",
+    "店内_耐克",
+    "店内_服装"
+   ],
+   "host_last": true
+  },
+  {
+   "slot": "title",
+   "lines": 1,
+   "cats": [
+    "入口外立面"
+   ],
+   "transition_in": "push_left",
+   "title_sticker": true
+  },
+  {
+   "slot": "selling_points",
+   "lines": [
+    3,
+    5
+   ],
+   "cats_pool": [
+    [
+     "折扣活动墙"
+    ],
+    [
+     "店内_服装",
+     "店内_耐克"
+    ],
+    [
+     "美陈_麦田",
+     "美陈_天使雕像"
+    ],
+    [
+     "中庭街景",
+     "氛围_5周年天使灯"
+    ]
+   ],
+   "transition_in": "flash_zoomblur",
+   "sticker": {
+    "text": "推荐",
+    "pos": "top_left"
+   }
+  },
+  {
+   "slot": "instant_buy",
+   "lines": 1,
+   "cats": [
+    "店内_MLB雕塑",
+    "店内_服装"
+   ],
+   "transition_in": "whip_left",
+   "host_last": true
+  },
+  {
+   "slot": "cta",
+   "lines": 2,
+   "cats": [
+    "店内_服装",
+    "门店招牌"
+   ],
+   "first_motion": "zoom_in_fast",
+   "transition_in": "zoom_blur"
+  }
+ ],
+ "transitions": {
+  "cut": {
+   "frames": 0
+  },
+  "push_left": {
+   "frames": 5
+  },
+  "flash_zoomblur": {
+   "frames": 4,
+   "flash_gain": 1.5
+  },
+  "whip_left": {
+   "frames": 6,
+   "blur_px": 60
+  },
+  "zoom_blur": {
+   "frames": 3,
+   "scale": 1.25
+  }
+ },
+ "caption": {
+  "font": "msyhbd",
+  "size": 68,
+  "color": "white",
+  "stroke": 7,
+  "shadow": true,
+  "center_y": 1400,
+  "max_chars": 11,
+  "highlight": true,
+  "anim": "none"
+ },
+ "title_sticker": {
+  "bg": "#FFE000",
+  "fg": "#000000",
+  "size": 96,
+  "y": 250,
+  "anim": "per_char_pop",
+  "anim_dur": 0.2,
+  "hold": 3.0
+ },
+ "keep_ad_badge": true,
+ "big_card": {
+  "size": 150,
+  "center_y": 760,
+  "fill": "#FFE000",
+  "stroke": "#C8102E",
+  "stroke_w": 12,
+  "outer": "#FFFFFF",
+  "pop": [
+   0.5,
+   0.85,
+   1.15,
+   1.06,
+   1.0
+  ]
+ }
+}

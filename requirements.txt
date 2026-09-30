@@ -1,0 +1,11 @@
+numpy
+opencv-python
+pillow
+faster-whisper
+zhconv
+edge-tts
+websockets
+requests
+pymediainfo
+openpyxl
+gradio>=4
