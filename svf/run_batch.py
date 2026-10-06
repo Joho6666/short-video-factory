@@ -31,12 +31,17 @@ def say(s):
         print(s, flush=True)
 
 
-def one(name):
+FAILED = []
+
+
+def one(name, retry=False):
     t0 = time.time()
     r = subprocess.run([PY, os.path.join(CODE, 'render.py'), name], capture_output=True, text=True, encoding='utf-8', env=ENV)
     out = f"{R}/成片/{name}.mp4"
     if r.returncode != 0 or 'render 0' not in r.stdout or not os.path.exists(out):
         say(f"FAIL render {name}: {r.stdout[-300:]} {r.stderr[-300:]}")
+        if not retry:
+            FAILED.append(name)
         return
     chk = subprocess.run([FF, '-v', 'error', '-i', out, '-f', 'null', '-'], capture_output=True, text=True)
     if chk.stderr.strip():
@@ -50,4 +55,7 @@ def one(name):
 T0 = time.time()
 with ThreadPoolExecutor(jobs) as ex:
     list(ex.map(one, args))
+for n in FAILED:  # 并行时 NVENC 偶发 -22,失败的条单独串行重跑
+    say(f'RETRY {n} (串行)')
+    one(n, retry=True)
 say(f'BATCH DONE {len(args)} 条 {time.time() - T0:.0f}s (并行 {jobs})')

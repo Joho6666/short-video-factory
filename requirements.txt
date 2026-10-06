@@ -9,3 +9,4 @@ requests
 pymediainfo
 openpyxl
 gradio>=4
+uiautomation
