@@ -95,6 +95,13 @@ def pick(cats, need, host=False):
     else:
         c = [k for k, e in idx.items() if e['内容'] in cats and e['类别'] == '空镜' and '_重名' not in k
              and not any(b in e['标记'] for b in BAD) and e['时长'] >= need + 0.3 + e.get('min_ss', 0)]
+    if not c and not host:      # 分类没有可用素材(新项目分类不同/素材少):退回"任何安全的空镜",而不是崩溃
+        c = [k for k, e in idx.items() if e['类别'] == '空镜' and '_重名' not in k
+             and not any(b in e['标记'] for b in BAD) and e['时长'] >= need + 0.3 + e.get('min_ss', 0)]
+        if c:
+            print(f"[警告] 分类 {cats} 无可用素材,退回任意空镜")
+    if not c:
+        raise RuntimeError(f"没有可用素材:分类 {cats},需要 {need:.1f}s(检查素材索引与风险标记)")
     c.sort(key=lambda k: (used.get(k, 0) * 3 + gused.get(k, 0) * 2, rng.random()))
     k = c[0]
     used[k] = used.get(k, 0) + 1

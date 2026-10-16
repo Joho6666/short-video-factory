@@ -70,8 +70,14 @@ def check(lines):
     return errs
 
 
+CAT_ALIAS = _B.get('cat_alias', {})   # 代码里的通用镜头需求名 → 本项目素材索引里的真实"内容"分类(缺省原样使用)
+
+
 def L_(text, cats, **k):
-    return dict(text=text, cats=cats, **k)
+    mapped = []
+    for c_ in cats:
+        mapped += CAT_ALIAS.get(c_, [c_])
+    return dict(text=text, cats=list(dict.fromkeys(mapped)), **k)
 
 
 # ------------------------------------------------------------------ 5 种风格的脚本结构
