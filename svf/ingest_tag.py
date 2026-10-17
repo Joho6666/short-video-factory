@@ -1,13 +1,20 @@
-"""入库打标(阶段一:免费的客观指标 + 供视觉模型看的分镜表)。
+"""入库打标:免费的客观指标 + 视觉模型看分镜表打标签。
 
 用法:
-  ingest_tag.py metrics            # 给素材索引每段加 清晰度/亮度/运动量/质量分(本地计算,不花 token)
-  ingest_tag.py sheets [N]         # 每段取 首/中/尾 三帧,按 N 段一张表(默认 12),给视觉模型看
+  ingest_tag.py metrics              # 给素材索引每段加 清晰度/亮度/运动量/质量分(本地计算,不花 token)
+  ingest_tag.py sheets [N] [--todo]  # 每段取 首/中/尾 三帧,N 段一张表(默认 12),写 数据/tag_tasks/(--todo 只出还没打标的)
+  ingest_tag.py apply 标签.json ...   # 校验并合并视觉模型给出的标签(默认只预演,加 --write 才写回)
+  ingest_tag.py status               # 统计已打标/未打标
+
+视觉模型不绑定:谁都行,只要按 templates/tag_schema.json 的格式写出 {"素材label": {shot, brand, quality, position, risk, note}}。
+  - 默认做法:在 Claude Code 会话里让 Claude 看 数据/tag_tasks/NN.jpg,把结果写成 tags_NN.json
+  - 以后可换 API 模型(如火山方舟 doubao 视觉模型),只要产出同格式 JSON 即可
 """
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-import cv2, json, os, sys, numpy as np
+import cv2, json, os, sys, shutil, numpy as np
 from config import R
+from risk import BAD
 
 IDX = R + '/数据/素材索引.json'
 
@@ -63,34 +70,108 @@ def cmd_metrics():
     print('metrics done', len(d))
 
 
-def cmd_sheets(n=12):
+def label_of(k):
+    return k[-8:]
+
+
+def cmd_sheets(n=12, todo=False):
     d = json.load(open(IDX, encoding='utf-8'))
-    os.makedirs(R + '/联系表/分镜', exist_ok=True)
-    keys = list(d)
+    out = R + '/数据/tag_tasks'
+    os.makedirs(out, exist_ok=True)
+    keys = [k for k in d if not (todo and d[k].get('AI标签'))]
+    labels = [label_of(k) for k in keys]
+    assert len(set(labels)) == len(labels), 'label 重复,无法在分镜表里区分素材'
+    manifest = {}
     for s in range(0, len(keys), n):
         rows = []
         for k in keys[s:s + n]:
             fr = frames(prev_path(k, d[k]))
             ims = []
             for f in fr:
-                f = cv2.resize(f, (180, 320)) if f is not None else np.zeros((320, 180, 3), np.uint8)
+                f = cv2.resize(f, (200, 356)) if f is not None else np.zeros((356, 200, 3), np.uint8)
                 ims.append(f)
             ims[0] = ims[0].copy()
-            cv2.rectangle(ims[0], (0, 0), (110, 22), (0, 0, 0), -1)
-            cv2.putText(ims[0], k[-8:], (3, 16), 0, 0.5, (0, 255, 255), 1)
+            cv2.rectangle(ims[0], (0, 0), (118, 24), (0, 0, 0), -1)
+            cv2.putText(ims[0], label_of(k), (3, 17), 0, 0.55, (0, 255, 255), 1)
             rows.append(np.hstack(ims))
-        # 每行放 2 段
         if len(rows) % 2:
             rows.append(np.zeros_like(rows[0]))
         im = np.vstack([np.hstack(rows[i:i + 2]) for i in range(0, len(rows), 2)])
-        name = f"{R}/联系表/分镜/{s // n + 1:02d}.jpg"
-        open(name, 'wb').write(cv2.imencode('.jpg', im, [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes())
-    print('sheets', (len(keys) + n - 1) // n)
+        no = f"{s // n + 1:02d}"
+        open(f"{out}/{no}.jpg", 'wb').write(cv2.imencode('.jpg', im, [cv2.IMWRITE_JPEG_QUALITY, 82])[1].tobytes())
+        manifest[no] = [label_of(k) for k in keys[s:s + n]]
+    json.dump(manifest, open(out + '/manifest.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print('sheets', len(manifest), '->', out)
+
+
+def schema():
+    return json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'templates', 'tag_schema.json'), encoding='utf-8'))
+
+
+def validate(tag):
+    sc = schema()
+    errs = []
+    if tag.get('shot') not in sc['shot']:
+        errs.append(f"shot={tag.get('shot')}")
+    if tag.get('position') not in sc['position']:
+        errs.append(f"position={tag.get('position')}")
+    if tag.get('quality') not in (1, 2, 3, 4, 5):
+        errs.append(f"quality={tag.get('quality')}")
+    for r in tag.get('risk', []):
+        if r not in BAD:
+            errs.append(f'risk 不在 BAD 里: {r}')
+    return errs
+
+
+def cmd_apply(files, write):
+    d = json.load(open(IDX, encoding='utf-8'))
+    by_label = {label_of(k): k for k in d}
+    stat = {'ok': 0, 'bad': 0, 'unknown': 0, 'new_risk': 0}
+    for f in files:
+        for lab, tag in json.load(open(f, encoding='utf-8')).items():
+            k = by_label.get(lab)
+            if not k:
+                stat['unknown'] += 1
+                print('未知素材', lab)
+                continue
+            es = validate(tag)
+            if es:
+                stat['bad'] += 1
+                print('✗', lab, es)
+                continue
+            new = [r for r in tag.get('risk', []) if r not in d[k]['标记']]
+            if new:
+                stat['new_risk'] += 1
+                print(f'  新增风险 {lab}: {new}  ({tag.get("note", "")})')
+            if write:
+                d[k]['AI标签'] = {x: tag.get(x) for x in ('shot', 'brand', 'quality', 'position', 'risk', 'note')}
+                d[k]['标记'] = list(d[k]['标记']) + new
+                if new:
+                    d[k]['AI新增风险'] = new
+            stat['ok'] += 1
+    print(stat)
+    if write:
+        shutil.copy(IDX, IDX.replace('.json', '.bak_apply.json'))
+        json.dump(d, open(IDX, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        print('已写回', IDX)
+    else:
+        print('(预演,未写回;确认无误后加 --write)')
+
+
+def cmd_status():
+    d = json.load(open(IDX, encoding='utf-8'))
+    n = sum(1 for v in d.values() if v.get('AI标签'))
+    print(f'已打标 {n} / {len(d)};AI 新增风险 {sum(1 for v in d.values() if v.get("AI新增风险"))} 段')
 
 
 if __name__ == '__main__':
-    a = sys.argv[1:] or ['metrics']
+    a = sys.argv[1:] or ['status']
     if a[0] == 'metrics':
         cmd_metrics()
+    elif a[0] == 'sheets':
+        nums = [x for x in a[1:] if x.isdigit()]
+        cmd_sheets(int(nums[0]) if nums else 12, '--todo' in a)
+    elif a[0] == 'apply':
+        cmd_apply([x for x in a[1:] if not x.startswith('--')], '--write' in a)
     else:
-        cmd_sheets(int(a[1]) if len(a) > 1 else 12)
+        cmd_status()
