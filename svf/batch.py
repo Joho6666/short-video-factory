@@ -167,8 +167,13 @@ def main():
     ap.add_argument('--qc-sample', type=float, default=0.3, help='抽多大比例做转写质检(0–1)')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--allow-untagged', action='store_true', help='允许使用未打标的素材(风险镜头无法被排除,不建议)')
+    ap.add_argument('--list-styles', action='store_true', help='列出本项目可用/被跳过的风格(JSON)')
     ap.add_argument('--dry', action='store_true', help='只生成文案并统计重复度,不配音不渲染')
     a = ap.parse_args()
+    if a.list_styles:
+        print(json.dumps(dict(available={k: STYLE_NAME[k] for k in sorted(SKEL)}, skipped={k: dict(name=STYLE_NAME[k], missing=v) for k, v in SKIPPED.items()}),
+                         ensure_ascii=False))
+        return
     styles = a.styles.split(',')
     for k, why in SKIPPED.items():
         print(f"[跳过风格] {k} {STYLE_NAME[k]}:项目缺 {', '.join(why)}")
