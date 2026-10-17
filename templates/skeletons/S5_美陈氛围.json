@@ -1,0 +1,189 @@
+{
+ "id": "S5",
+ "name": "美陈氛围",
+ "kind": "ambient",
+ "gap": 0.3,
+ "music_vol": 0.3,
+ "target_s": [
+  28,
+  36
+ ],
+ "doc": "慢节奏氛围片:美陈、人潮、灯光为主,字幕小而轻,缓推为主",
+ "style_override": {
+  "caption": {
+   "size": 58,
+   "stroke": 5,
+   "center_y": 1480,
+   "highlight": false
+  },
+  "shot": {
+   "max": 2.6,
+   "zoom_amount": 0.05,
+   "motion_pool": [
+    "zoom_in_slow",
+    "zoom_out_slow"
+   ]
+  }
+ },
+ "sequence": [
+  {
+   "type": "line",
+   "text": {
+    "pool": "S5_OPEN"
+   },
+   "cats": [
+    "decor_a"
+   ],
+   "motion": "zoom_in_slow"
+  },
+  {
+   "type": "line",
+   "text": {
+    "index_choice": [
+     [
+      "S5",
+      1
+     ],
+     [
+      "S5",
+      10
+     ]
+    ]
+   },
+   "cats": [
+    "decor_a"
+   ],
+   "host_last": true
+  },
+  {
+   "type": "line",
+   "text": {
+    "index_choice": [
+     [
+      "S5",
+      2
+     ],
+     [
+      "S5",
+      3
+     ]
+    ]
+   },
+   "cats": [
+    "decor_b",
+    "decor_c"
+   ]
+  },
+  {
+   "type": "line",
+   "text": {
+    "index": [
+     "S5",
+     4
+    ]
+   },
+   "cats": [
+    "decor_a",
+    "decor_c"
+   ]
+  },
+  {
+   "type": "line",
+   "text": {
+    "index": [
+     "S5",
+     5
+    ]
+   },
+   "cats": [
+    "crowd",
+    "plaza"
+   ],
+   "tin": "zoom_blur"
+  },
+  {
+   "type": "line",
+   "text": {
+    "index": [
+     "S5",
+     6
+    ]
+   },
+   "cats": [
+    "interior",
+    "storefront"
+   ]
+  },
+  {
+   "type": "line",
+   "text": {
+    "index_choice": [
+     [
+      "S5",
+      7
+     ],
+     [
+      "S5",
+      10
+     ]
+    ]
+   },
+   "cats": [
+    "entrance"
+   ]
+  }
+ ],
+ "optional": [
+  {
+   "at": 3,
+   "exclude_core_texts": true,
+   "nodes": [
+    {
+     "type": "line",
+     "text": {
+      "index": [
+       "S5",
+       2
+      ]
+     },
+     "cats": [
+      "decor_c",
+      "ambience",
+      "decor_b",
+      "decor_a"
+     ]
+    },
+    {
+     "type": "line",
+     "text": {
+      "index": [
+       "S5",
+       3
+      ]
+     },
+     "cats": [
+      "decor_c",
+      "ambience",
+      "decor_b",
+      "decor_a"
+     ]
+    },
+    {
+     "type": "line",
+     "text": {
+      "index": [
+       "S5",
+       9
+      ]
+     },
+     "cats": [
+      "decor_c",
+      "ambience",
+      "decor_b",
+      "decor_a"
+     ]
+    }
+   ]
+  }
+ ]
+}

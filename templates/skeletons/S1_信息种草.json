@@ -1,0 +1,176 @@
+{
+ "id": "S1",
+ "name": "信息种草",
+ "kind": "narration",
+ "gap": 0.12,
+ "music_vol": 0.22,
+ "target_s": [
+  28,
+  36
+ ],
+ "doc": "品牌引子 → 标题 → 四个卖点块(顺序随机) → 收尾召唤;时长不够时补美食/演出/美陈/音乐句",
+ "sequence": [
+  {
+   "type": "line",
+   "text": {
+    "pool": "HOOK"
+   },
+   "cats": [
+    "crowd",
+    "storefront",
+    "entrance"
+   ],
+   "motion": "zoom_in_slow"
+  },
+  {
+   "type": "line",
+   "text": {
+    "pool": "TITLE"
+   },
+   "cats": [
+    "entrance"
+   ],
+   "tin": "push_left",
+   "title": "brand"
+  },
+  {
+   "type": "shuffle",
+   "blocks": [
+    [
+     {
+      "type": "line",
+      "text": {
+       "pool": "DISC"
+      },
+      "cats": [
+       "promo_wall"
+      ],
+      "big": "disc",
+      "tin": "flash_zoomblur"
+     },
+     {
+      "type": "line",
+      "text": {
+       "pool": "MEMBER"
+      },
+      "cats": [
+       "interior"
+      ],
+      "host_last": true
+     }
+    ],
+    [
+     {
+      "type": "line",
+      "text": {
+       "pool": "CATS"
+      },
+      "cats": [
+       "storefront",
+       "interior_sport"
+      ],
+      "tin": "whip_left"
+     }
+    ],
+    [
+     {
+      "type": "line",
+      "text": {
+       "pool": "TUAN"
+      },
+      "cats": [
+       "interior",
+       "window"
+      ],
+      "tin": "flash_zoomblur",
+      "big": "tuan",
+      "sticker": "推荐",
+      "sticker_lines": 2
+     },
+     {
+      "type": "line",
+      "text": {
+       "pool": "COUPON"
+      },
+      "cats": [
+       "interior_sport"
+      ]
+     }
+    ],
+    [
+     {
+      "type": "line",
+      "text": {
+       "pool": "CAKE"
+      },
+      "cats": [
+       "crowd"
+      ],
+      "big": "cake",
+      "tin": "push_left"
+     }
+    ]
+   ]
+  },
+  {
+   "type": "line",
+   "text": {
+    "pool": "END"
+   },
+   "cats": [
+    "storefront",
+    "entrance"
+   ],
+   "tin": "zoom_blur",
+   "motion": "zoom_in_fast",
+   "big": "end"
+  }
+ ],
+ "optional": [
+  {
+   "at": "end-1",
+   "shuffle": true,
+   "nodes": [
+    {
+     "type": "line",
+     "text": {
+      "pool": "FOOD"
+     },
+     "cats": [
+      "food"
+     ]
+    },
+    {
+     "type": "line",
+     "text": {
+      "pool": "PARTY"
+     },
+     "cats": [
+      "parade",
+      "crowd"
+     ]
+    },
+    {
+     "type": "line",
+     "text": {
+      "pool": "MEICHEN"
+     },
+     "cats": [
+      "decor_a",
+      "decor_b"
+     ]
+    },
+    {
+     "type": "line",
+     "text": {
+      "pool": "MUSIC"
+     },
+     "cats": [
+      "crowd",
+      "plaza"
+     ]
+    }
+   ]
+  }
+ ]
+}

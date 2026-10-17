@@ -1,0 +1,51 @@
+{
+ "id": "S4",
+ "name": "清单体",
+ "kind": "list",
+ "gap": 0.12,
+ "music_vol": 0.22,
+ "target_s": [
+  28,
+  36
+ ],
+ "doc": "'N 个理由'清单:每个理由一张编号大字卡,理由内容取自 project.json batch.reasons",
+ "style_override": {
+  "big_card": {
+   "size": 120,
+   "center_y": 640
+  }
+ },
+ "sequence": [
+  {
+   "type": "reasons",
+   "open_pool": "S4_OPEN",
+   "open_cats": [
+    "entrance",
+    "crowd"
+   ],
+   "take": 4,
+   "fixed_first": 2,
+   "numerals": "一二三四五",
+   "line_format": "理由{cn}:{t}{more}",
+   "big_format": "NO.{i} {b}",
+   "tins": [
+    "push_left",
+    "flash_zoomblur",
+    "whip_left"
+   ],
+   "extra_tin": "push_left",
+   "end": {
+    "type": "line",
+    "text": {
+     "pool": "END"
+    },
+    "cats": [
+     "entrance",
+     "storefront"
+    ],
+    "tin": "zoom_blur",
+    "motion": "zoom_in_fast"
+   }
+  }
+ ]
+}

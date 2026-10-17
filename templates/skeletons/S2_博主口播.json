@@ -1,0 +1,106 @@
+{
+ "id": "S2",
+ "name": "博主口播",
+ "kind": "host",
+ "gap": 0.12,
+ "music_vol": 0.16,
+ "target_s": [
+  28,
+  36
+ ],
+ "doc": "博主原声句与旁白句交替:画面与音频同步(host_audio),口播中间插入空镜",
+ "sequence": [
+  {
+   "type": "line",
+   "text": {
+    "pool": "S2_OPEN"
+   },
+   "cats": [
+    "crowd",
+    "entrance"
+   ],
+   "title": "brand"
+  },
+  {
+   "type": "line",
+   "text": {
+    "project_key": "s2_disc_line",
+    "fallback_pool": "DISC"
+   },
+   "cats": [
+    "promo_wall",
+    "interior"
+   ],
+   "big": "disc",
+   "tin": "flash_zoomblur"
+  },
+  {
+   "type": "line",
+   "text": {
+    "pool": "TUAN"
+   },
+   "cats": [
+    "interior_sport",
+    "storefront"
+   ],
+   "big": "tuan"
+  },
+  {
+   "type": "host",
+   "clip": "DAKA",
+   "insert": "DAKA",
+   "tin": "push_left"
+  },
+  {
+   "type": "line",
+   "text": {
+    "pool": "PARTY"
+   },
+   "cats": [
+    "parade",
+    "crowd"
+   ]
+  },
+  {
+   "type": "host",
+   "clip": "CAKE",
+   "insert": "CAKE",
+   "big": "cake"
+  },
+  {
+   "type": "host",
+   "clip": "END",
+   "tin": "zoom_blur"
+  }
+ ],
+ "optional": [
+  {
+   "at": 3,
+   "nodes": [
+    {
+     "type": "line",
+     "text": {
+      "pool": "COUPON"
+     },
+     "cats": [
+      "interior"
+     ]
+    }
+   ]
+  },
+  {
+   "at": 5,
+   "nodes": [
+    {
+     "type": "line",
+     "text": {
+      "pool": "FOOD"
+     },
+     "cats": [
+      "food"
+     ]
+    }
+   ]
+  }
+ ]
+}

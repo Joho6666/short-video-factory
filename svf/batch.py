@@ -26,6 +26,7 @@ import wave
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import R, FF, PY, WL, BANW, BAN_EXCEPT, SAY, PROJECT, CODE  # noqa: E402
+import skeleton  # noqa: E402
 from universal_tts import generate_voice_with_meta  # noqa: E402   (来自 jianying-editor skill:剪映 SAMI 配音)
 
 # ------------------------------------------------------------------ 项目数据(全部来自项目目录,代码里不放客户内容)
@@ -35,7 +36,8 @@ BIG = {'disc': '', 'tuan': '', 'cake': '', 'end': '', **_B.get('big_cards', {})}
 MUSIC = {k: [x.replace('{project}', R) for x in v] for k, v in _B.get('music', {}).items()}
 SPK = _B.get('speakers') or {s: ['zh_male_ad'] for s in ['S1', 'S2', 'S3', 'S4', 'S5']}
 SPEED = _B.get('speed') or {'S1': 1.12, 'S2': 1.2, 'S3': 1.08, 'S4': 1.12, 'S5': 1.1}
-STYLE_NAME = {'S1': '信息种草', 'S2': '博主口播', 'S3': '卡点混剪', 'S4': '清单体', 'S5': '美陈氛围'}
+SKEL = skeleton.load_all(R)                                                          # 风格骨架:templates/skeletons/*.json(项目 模板/skeletons 可覆盖)
+STYLE_NAME = {k: v['name'] for k, v in SKEL.items()}
 HOST_POOL = _B.get('host_pool', [])
 HOST = {k: [tuple(x) for x in v] for k, v in _B.get('host_clips', {}).items()}      # 博主原声:(素材, 起点, 时长, 字幕)
 HOST_INSERT = _B.get('host_inserts', {})                                            # 口播中间插入的空镜
@@ -85,7 +87,7 @@ from collections import Counter as _Counter
 TXT_USED = _Counter()   # 本批各句子已用次数:优先选用得最少的说法
 
 
-def build(style, rng):
+def build_legacy(style, rng):
     def c(lst):
         m = min(TXT_USED[x] for x in lst)
         x = rng.choice([y for y in lst if TXT_USED[y] == m])
@@ -176,6 +178,16 @@ def build(style, rng):
     raise ValueError(style)
 
 
+def build(style, rng):
+    def c(lst):
+        m = min(TXT_USED[x] for x in lst)
+        x = rng.choice([y for y in lst if TXT_USED[y] == m])
+        TXT_USED[x] += 1
+        return x
+    ctx = skeleton.Ctx(P, _B, BRAND, BIG, HOST, HOST_INSERT, REASONS, c, L_)
+    return skeleton.build(SKEL[style], ctx, rng)
+
+
 # ------------------------------------------------------------------ 配音(剪映 SAMI,带缓存,并发)
 TTS_DIR = R + '/数据/tts_cache_sami'
 os.makedirs(TTS_DIR, exist_ok=True)
@@ -228,7 +240,7 @@ def main():
     ap.add_argument('--n', type=int, default=5)
     ap.add_argument('--start', type=int, default=401)
     ap.add_argument('-j', type=int, default=3)
-    ap.add_argument('--styles', default='S1,S2,S3,S4,S5')
+    ap.add_argument('--styles', default=','.join(sorted(SKEL)))
     ap.add_argument('--qc-sample', type=float, default=0.3, help='抽多大比例做转写质检(0–1)')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--dry', action='store_true', help='只生成文案并统计重复度,不配音不渲染')
@@ -277,7 +289,7 @@ def main():
     # 3) 控时长 + 写脚本
     for p in plans:
         style, rng = p['style'], p['rng']
-        gap = {'S3': 0.25, 'S5': 0.3}.get(style, 0.12)
+        gap = SKEL[style].get('gap', 0.12)
         lines = list(p['core'])
         opt = list(p['opt'])
         while est_total(lines, p['spk'], SPEED[style], gap) < 28 and opt:
@@ -298,15 +310,10 @@ def main():
         name = f"b{p['no']}"
         sc = dict(name=name, template="B_信息种草", batch=f"b{a.start}", seed=p['no'], host_pool=HOST_POOL,
                   style_id=style, 风格=STYLE_NAME[style], speaker=p['spk'], speed=SPEED[style], gap=gap,
-                  music_file=rng.choice(MUSIC[style]), music_vol={'S2': 0.16, 'S3': 0.3, 'S5': 0.3}.get(style, 0.22),
+                  music_file=rng.choice(MUSIC[style]), music_vol=SKEL[style].get('music_vol', 0.22),
                   lines=lines)
-        if style == 'S3':
-            sc['style'] = dict(caption=dict(size=92, center_y=1250, max_chars=9, stroke=9))
-        if style == 'S4':
-            sc['style'] = dict(big_card=dict(size=120, center_y=640))
-        if style == 'S5':
-            sc['style'] = dict(caption=dict(size=58, stroke=5, center_y=1480, highlight=False),
-                               shot=dict(max=2.6, zoom_amount=0.05, motion_pool=["zoom_in_slow", "zoom_out_slow"]))
+        if SKEL[style].get('style_override'):
+            sc['style'] = SKEL[style]['style_override']
         json.dump(sc, open(f"{R}/脚本/{name}.json", 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
         names.append(name)
         meta[name] = dict(风格=STYLE_NAME[style], 配音=p['spk'], 预估时长=round(est_total(lines, p['spk'], SPEED[style], gap), 1),

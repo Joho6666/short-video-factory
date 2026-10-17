@@ -1,0 +1,83 @@
+{
+ "id": "S3",
+ "name": "卡点混剪",
+ "kind": "montage",
+ "gap": 0.25,
+ "music_vol": 0.3,
+ "target_s": [
+  28,
+  36
+ ],
+ "doc": "短句快切,镜头切点吸附音乐拍点;字幕更大更少",
+ "style_override": {
+  "caption": {
+   "size": 92,
+   "center_y": 1250,
+   "max_chars": 9,
+   "stroke": 9
+  }
+ },
+ "sequence": [
+  {
+   "type": "montage",
+   "pool": "S3",
+   "head_pools": [
+    "S3_HEAD",
+    "S3_TITLE"
+   ],
+   "head_cats": [
+    [
+     "crowd"
+    ],
+    [
+     "entrance"
+    ]
+   ],
+   "tail_fixed_index": 11,
+   "tail_pool": "S3_END",
+   "tail_cat": [
+    "entrance"
+   ],
+   "mid_slices": [
+    [
+     2,
+     11
+    ],
+    [
+     13,
+     null
+    ]
+   ],
+   "mid_take": 9,
+   "fallback_cats": [
+    [
+     "storefront"
+    ],
+    [
+     "interior"
+    ],
+    [
+     "interior_sport"
+    ],
+    [
+     "window"
+    ]
+   ],
+   "title": "brand",
+   "title_at": 1,
+   "title_tin": "push_left",
+   "random_tin_at": [
+    4,
+    8
+   ],
+   "tins": [
+    "flash_zoomblur",
+    "whip_left",
+    "push_left"
+   ],
+   "leftover_cat": [
+    "interior"
+   ]
+  }
+ ]
+}
