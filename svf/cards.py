@@ -27,6 +27,43 @@ def all_cards():
     return [load(p) for p in sorted(glob.glob(os.path.join(ROOT, '*', '*.md')))]
 
 
+def derive_used(tpl):
+    """从骨架里的实际用法推出它用到了哪些配方卡(转场/大字卡/标题/卡点/运镜/字幕)。"""
+    cards = {'caption-bold-outline'}
+    nodes = []
+
+    def walk(x):
+        if isinstance(x, dict):
+            nodes.append(x)
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    walk(tpl.get('sequence', []))
+    walk(tpl.get('optional', []))
+    tin_card = {'push_left': 'push-left', 'flash_zoomblur': 'flash-whitefade', 'whip_left': 'whip-blur', 'zoom_blur': 'zoom-in-cut'}
+    for n in nodes:
+        for k in ('tin', 'title_tin', 'extra_tin'):
+            if n.get(k) in tin_card:
+                cards.add(tin_card[n[k]])
+        for t in n.get('tins', []) if isinstance(n.get('tins'), list) else []:
+            if t in tin_card:
+                cards.add(tin_card[t])
+        if 'big' in n or 'big_format' in n or 'big_key' in n:
+            cards.add('big-card-pop')
+        if 'title' in n or 'open_cats' in n:
+            cards.add('title-sticker-pop')
+        if n.get('beat') or n.get('type') == 'montage':
+            cards.add('beat-cut-snap')
+    pool = (tpl.get('style_override', {}).get('shot', {}) or {}).get('motion_pool') or ['zoom_in_slow', 'zoom_out_slow', 'pan_left', 'pan_right']
+    if any(m.startswith('zoom') for m in pool):
+        cards.add('push-in-slow')
+    if any(m.startswith('pan') for m in pool):
+        cards.add('pan-sweep')
+    return cards
+
+
 def check():
     errs = []
     cards = all_cards()
@@ -67,6 +104,25 @@ def check():
                     errs.append(f'{n}: {k} 与模板不一致')
         if n == 'push-in-slow' and p['zoom_in_slow']['amount'] != tpl['shot']['zoom_amount']:
             errs.append(f'{n}: amount 与模板 zoom_amount 不一致')
+    # 骨架 ↔ 配方卡 双向一致:骨架声明的 cards 必须等于实际用到的;卡的"风格"必须等于用到它的骨架
+    import skeleton
+    from config import R
+    skel = skeleton.load_all(R)
+    byname = {c['name']: c for c in cards}
+    used_by = {n: set() for n in byname}
+    for sid, t in skel.items():
+        used = derive_used(t)
+        decl = set(t.get('cards', []))
+        if decl != used:
+            errs.append(f"骨架 {sid}: 声明的 cards 与实际不符  多写 {sorted(decl - used)}  漏写 {sorted(used - decl)}")
+        for n in used:
+            if n not in byname:
+                errs.append(f'骨架 {sid}: 引用了不存在的卡 {n}')
+            else:
+                used_by[n].add(sid)
+    for n, c in byname.items():
+        if set(c['风格']) != used_by[n]:
+            errs.append(f"{n}: 卡里写的风格 {sorted(c['风格'])} 与骨架实际使用 {sorted(used_by[n])} 不一致")
     return cards, errs
 
 

@@ -9,6 +9,16 @@
   36
  ],
  "doc": "博主原声句与旁白句交替:画面与音频同步(host_audio),口播中间插入空镜",
+ "cards": [
+  "big-card-pop",
+  "caption-bold-outline",
+  "flash-whitefade",
+  "pan-sweep",
+  "push-in-slow",
+  "push-left",
+  "title-sticker-pop",
+  "zoom-in-cut"
+ ],
  "sequence": [
   {
    "type": "line",

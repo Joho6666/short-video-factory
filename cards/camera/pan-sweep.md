@@ -5,7 +5,7 @@ name: pan-sweep
 适用: 中庭街景、货架长排、店面横幅;不适合近景人物(会显得人在滑)
 时长: 随镜头长度(通常 0.9~2.0s)
 能量: 低
-风格: S1,S2,S3,S4,S5
+风格: S1,S2,S3,S4
 实现: svf/render.py 逐镜头渲染段,motion 为 pan_left / pan_right
 参数: {"pan_left": {"travel_px": 132}, "pan_right": {"travel_px": 132}, "scale": [1752, 3114], "crop": [1620, 2880], "out": [1080, 1920]}
 ---
@@ -23,5 +23,5 @@ name: pan-sweep
 
 ## 已知坑
 - 平移在 1.5 倍分辨率上做再缩回 1080×1920,**不要改成直接在 1080 上 crop**,会出现像素跳动,看着像掉帧。
-- 运镜是在 motion_pool 里随机抽的(`zoom_in_slow, zoom_out_slow, pan_left, pan_right`),不是按内容选。后续有素材打标后可以按镜头类型选运镜(横幅画面优先平移)。
+- S5 美陈氛围的运镜池只有推/拉,不含平移。运镜是在 motion_pool 里随机抽的(`zoom_in_slow, zoom_out_slow, pan_left, pan_right`),不是按内容选。后续有素材打标后可以按镜头类型选运镜(横幅画面优先平移)。
 - 口播素材(host_audio)不能用平移:画面和音频要同步,运镜会让口型显得错位。

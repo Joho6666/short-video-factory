@@ -9,6 +9,17 @@
   36
  ],
  "doc": "短句快切,镜头切点吸附音乐拍点;字幕更大更少",
+ "cards": [
+  "beat-cut-snap",
+  "big-card-pop",
+  "caption-bold-outline",
+  "flash-whitefade",
+  "pan-sweep",
+  "push-in-slow",
+  "push-left",
+  "title-sticker-pop",
+  "whip-blur"
+ ],
  "style_override": {
   "caption": {
    "size": 92,
@@ -77,7 +88,9 @@
    ],
    "leftover_cat": [
     "interior"
-   ]
+   ],
+   "big_key": "s3_big",
+   "cats_key": "s3_cats"
   }
  ]
 }

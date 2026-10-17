@@ -9,6 +9,17 @@
   36
  ],
  "doc": "'N 个理由'清单:每个理由一张编号大字卡,理由内容取自 project.json batch.reasons",
+ "cards": [
+  "big-card-pop",
+  "caption-bold-outline",
+  "flash-whitefade",
+  "pan-sweep",
+  "push-in-slow",
+  "push-left",
+  "title-sticker-pop",
+  "whip-blur",
+  "zoom-in-cut"
+ ],
  "style_override": {
   "big_card": {
    "size": 120,

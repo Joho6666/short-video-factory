@@ -9,6 +9,11 @@
   36
  ],
  "doc": "慢节奏氛围片:美陈、人潮、灯光为主,字幕小而轻,缓推为主",
+ "cards": [
+  "caption-bold-outline",
+  "push-in-slow",
+  "zoom-in-cut"
+ ],
  "style_override": {
   "caption": {
    "size": 58,
