@@ -153,6 +153,23 @@ def run_batch(n, start, styles, j, qc, fps60):
     yield log[-8000:] + f"\n完成(退出码 {p.returncode})", (open(rep, encoding='utf-8').read() if os.path.exists(rep) else None), vids
 
 
+# ------------------------------------------------------------------ 素材打标
+def run_tag(step):
+    cmd = [PY, '-u', os.path.join(ROOT, 'svf', 'ingest_tag.py')] + {'分镜表': ['sheets', '--todo'], '自动打标': ['auto'], '预演合并': ['apply'], '写回': ['apply', '--write']}[step]
+    if step in ('预演合并', '写回'):
+        cmd[3:3] = sorted(glob.glob(os.path.join(R(), '数据', 'tag_tasks', 'auto_*.json')))
+    log = '$ ' + ' '.join(cmd[2:]) + chr(10)
+    yield log
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='ignore', env=env())
+    for line in p.stdout:
+        if 'unrecognized_model' in line:
+            continue
+        log += line
+        yield log[-6000:]
+    p.wait()
+    yield log[-6000:] + chr(10) + f'完成(退出码 {p.returncode})'
+
+
 # ------------------------------------------------------------------ 口播
 def run_talk(video, script, name, broll, model):
     if not video or not os.path.exists(video):
@@ -287,6 +304,16 @@ with gr.Blocks(title='Short Video Factory') as demo:
         tbl = gr.Dataframe(headers=['类别 / 标记', '段数'])
         sg = gr.Gallery(label='联系表', columns=3, height=600)
         sb.click(material_stats, None, [tbl, sg])
+        gr.Markdown('**入库打标**:先"生成分镜表",再"自动打标"(调用本机 Claude Code,模型见 config.json 的 `tag_model`;用本地代理时需先启动代理),'
+                    '核对"预演合并"的新增风险后"写回"。自动打标只是第一遍,**请抽查**。')
+        with gr.Row():
+            tb1 = gr.Button('生成分镜表')
+            tb2 = gr.Button('自动打标')
+            tb3 = gr.Button('预演合并')
+            tb4 = gr.Button('写回', variant='primary')
+        tglog = gr.Textbox(label='打标日志', lines=10, autoscroll=True)
+        for _b, _n in ((tb1, '分镜表'), (tb2, '自动打标'), (tb3, '预演合并'), (tb4, '写回')):
+            _b.click(lambda _n=_n: run_tag(_n), None, tglog)
 
 if __name__ == '__main__':
     demo.queue().launch(server_name='127.0.0.1', server_port=7860, inbrowser=False,

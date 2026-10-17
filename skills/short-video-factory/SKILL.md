@@ -53,13 +53,15 @@ cd E:/short-video-factory
 svf/ingest_proxy.py       # 转 60fps 预览(HDR 色调映射)
 svf/ingest_index.py       # 生成/补全 数据/素材索引.json(内容先写"未分类")
 svf/ingest_tag.py sheets  # 每段取首/中/尾三帧,12 段一张表 → 数据/tag_tasks/NN.jpg + manifest.json
-# Claude 看每张表,按 templates/tag_schema.json 写 tags_NN.json:{label: {shot, brand, quality, position, risk, note}}
+# 方式 A(自动):svf/ingest_tag.py auto  → 调本机 `claude -p`(模型见 config.json 的 tag_model,当前 gpt-5.6-sol,经本地 CLIProxyAPI 127.0.0.1:8317,需先启动),写 auto_NN.json
+# 方式 B(会话内):Claude 看每张表,按 templates/tag_schema.json 写 tags_NN.json:{label: {shot, brand, quality, position, risk, note}}
 svf/ingest_tag.py apply 数据/tag_tasks/tags_*.json            # 先预演(校验+列出将新增的风险)
 svf/ingest_tag.py apply 数据/tag_tasks/tags_*.json --write    # 确认后写回(自动备份)
 ```
 - risk 只能取 `svf/risk.py` 的标签原文;项目可在 project.json 写 `risk_tags` **整体替换**默认(默认是商场促销类)。
 - 打标靠缩略图,**拿不准的风险宁可标**(儿童/路人正脸、品牌折扣牌、明星肖像海报、手指入镜、其他档期招牌);标得多会让可用镜头变少,批量时重复率上升,要在两者间权衡。
-- 视觉模型不绑定:默认由 Claude 在会话里看图;以后接 API 模型只要产出同格式 JSON。
+- 视觉模型不绑定,产出同格式 JSON 即可。**自动打标实测(12 段样本对照人工):价牌类基本能标出,但会漏掉汉堡节摊位和人脸、并把"5周年庆"类横幅重复标成"其他档期"——只当第一遍,必须抽查。** 每 12 段约 3 分钟。
+- 桌面 App 会话里的 ANTHROPIC_* 环境变量会让子进程 401,`auto` 已自动清掉;本地代理没启动会 Connection refused(要等几分钟重试才报错,先确认 8317 端口通)。
 
 ## 口播剪辑(T1)
 ```bash
