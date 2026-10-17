@@ -21,7 +21,7 @@ if args[:1] == ['-j']:
     jobs, args = int(args[1]), args[2:]
 log = open(R + '/成片/batch.log', 'a', encoding='utf-8')
 lock = threading.Lock()
-ENV = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'AVD_SHOT_WORKERS': str(max(2, 8 // jobs))}
+ENV = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'AVD_SHOT_WORKERS': str(max(2, 4 // jobs))}
 
 
 def say(s):

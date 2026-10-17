@@ -236,10 +236,25 @@ for i, s in enumerate(shots):
     s['_file'] = out
     s['_len'] = L_
 from concurrent.futures import ThreadPoolExecutor
-with ThreadPoolExecutor(int(os.getenv('AVD_SHOT_WORKERS', '6'))) as _ex:
-    for _r in _ex.map(lambda c: subprocess.run(c, capture_output=True, text=True), jobs):
+with ThreadPoolExecutor(int(os.getenv('AVD_SHOT_WORKERS', '4'))) as _ex:
+    def _run_job(c):
+        # 显卡编码会话数有限,多路并发时偶发 -22(Invalid argument):稍等重试,最后一次退回 CPU 编码
+        for k_ in range(3):
+            r_ = subprocess.run(c, capture_output=True, text=True)
+            if r_.returncode == 0 or 'nvenc' not in ' '.join(c):
+                return r_
+            _time.sleep(0.4 * (k_ + 1))
+            if k_ == 1:
+                c = [x for x in c]
+                i_ = c.index('h264_nvenc')
+                j_ = c.index('-bf')
+                c[i_ - 1:j_ + 2] = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16']
+        return r_
+
+    for _c, _r in zip(jobs, _ex.map(_run_job, jobs)):
         if _r.returncode != 0:
-            raise RuntimeError('镜头渲染失败: ' + _r.stderr[-300:])
+            _i = _c[_c.index('-ss') + 1], _c[_c.index('-i') + 1], _c[_c.index('-frames:v') + 1]
+            raise RuntimeError(f'镜头渲染失败 ss={_i[0]} 素材={_i[1]} 帧数={_i[2]}: ' + _r.stderr[-300:])
 print('镜头数', len(shots)); _tick('逐镜头渲染')
 
 # ---------- 字幕、花字、贴纸 PNG
