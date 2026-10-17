@@ -34,10 +34,16 @@ _B = PROJECT.get('batch', {})
 BRAND = PROJECT.get('brand_title', '品牌名')
 BIG = {'disc': '', 'tuan': '', 'cake': '', 'end': '', **_B.get('big_cards', {})}   # 大字卡文字
 MUSIC = {k: [x.replace('{project}', R) for x in v] for k, v in _B.get('music', {}).items()}
-SPK = _B.get('speakers') or {s: ['zh_male_ad'] for s in ['S1', 'S2', 'S3', 'S4', 'S5']}
-SPEED = _B.get('speed') or {'S1': 1.12, 'S2': 1.2, 'S3': 1.08, 'S4': 1.12, 'S5': 1.1}
-SKEL = {k: v for k, v in skeleton.load_all(R).items() if v.get('kind') != 'talk'}                                                          # 风格骨架:templates/skeletons/*.json(项目 模板/skeletons 可覆盖)
-STYLE_NAME = {k: v['name'] for k, v in SKEL.items()}
+SPK = _B.get('speakers') or {}
+SPEED = _B.get('speed') or {}
+
+
+def per_style(d, style, default):
+    """按风格取项目配置(配音/语速/配乐);没配这个风格就用 default 键,再没有就用保底值。"""
+    return d.get(style) or d.get('default') or default
+
+
+SKEL_ALL = {k: v for k, v in skeleton.load_all(R).items() if v.get('kind') != 'talk'}                                                          # 风格骨架:templates/skeletons/*.json(项目 模板/skeletons 可覆盖)
 HOST_POOL = _B.get('host_pool', [])
 HOST = {k: [tuple(x) for x in v] for k, v in _B.get('host_clips', {}).items()}      # 博主原声:(素材, 起点, 时长, 字幕)
 HOST_INSERT = _B.get('host_inserts', {})                                            # 口播中间插入的空镜
@@ -46,6 +52,14 @@ CN_NUM = "一二三四五"
 _PF = R + '/数据/文案池.json'                                                       # 可编辑的文案池
 P = json.load(open(_PF, encoding='utf-8')) if os.path.exists(_PF) else {}
 P.setdefault('S2_OPEN', P.get('HOOK', ['']))
+SKEL, SKIPPED = {}, {}
+for _k, _v in SKEL_ALL.items():       # 项目缺文案池/博主片段/清单理由的风格自动跳过,并说明缺什么
+    _m = skeleton.missing(_v, P, HOST, REASONS)
+    if _m:
+        SKIPPED[_k] = _m
+    else:
+        SKEL[_k] = _v
+STYLE_NAME = {k: v['name'] for k, v in SKEL_ALL.items()}
 
 
 def plain(t):
@@ -148,13 +162,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=5)
     ap.add_argument('--start', type=int, default=401)
-    ap.add_argument('-j', type=int, default=3)
+    ap.add_argument('-j', type=int, default=1, help='并行渲染条数;内存 16GB 建议 1(并行 ≥2 时合成阶段会内存不足)')
     ap.add_argument('--styles', default=','.join(sorted(SKEL)))
     ap.add_argument('--qc-sample', type=float, default=0.3, help='抽多大比例做转写质检(0–1)')
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--allow-untagged', action='store_true', help='允许使用未打标的素材(风险镜头无法被排除,不建议)')
     ap.add_argument('--dry', action='store_true', help='只生成文案并统计重复度,不配音不渲染')
     a = ap.parse_args()
     styles = a.styles.split(',')
+    for k, why in SKIPPED.items():
+        print(f"[跳过风格] {k} {STYLE_NAME[k]}:项目缺 {', '.join(why)}")
+    _idx = json.load(open(R + '/数据/素材索引.json', encoding='utf-8')) if os.path.exists(R + '/数据/素材索引.json') else {}
+    _un = [k for k, v in _idx.items() if v['类别'] == '空镜' and not v.get('AI标签') and v.get('内容') in (None, '', '未分类')]
+    if _un and not a.dry:
+        if not a.allow_untagged:
+            raise SystemExit(f"素材索引里有 {len(_un)} 段空镜还没打标(风险镜头——路人/儿童正脸、品牌折扣牌、明星肖像、手指入镜——无法排除)。"
+                             f"\n先打标: python svf/ingest_tag.py sheets  →看图写标签→ ingest_tag.py apply ... --write ;或加 --allow-untagged 强行出片。")
+        print(f"[警告] {len(_un)} 段空镜未打标,风险镜头可能入片")
+    bad = [x for x in styles if x not in SKEL]
+    if bad:
+        raise SystemExit(f"风格 {bad} 不可用(缺素材/文案,见上面的[跳过风格]),可用: {sorted(SKEL)}")
     T0 = time.time()
     tm = {}
     names, meta = [], {}
@@ -177,7 +204,7 @@ def main():
         else:
             raise RuntimeError(f"b{no} 合规检查始终不过: {check(core + [o for _, o in opt])}")
         seen.add(sig)
-        spk = rng.choice(SPK[style])
+        spk = rng.choice(per_style(SPK, style, ['zh_male_ad']))
         plans.append(dict(no=no, style=style, core=core, opt=opt, spk=spk, rng=rng))
     tm['文案+合规'] = time.time() - t
     if a.dry:
@@ -201,10 +228,10 @@ def main():
         gap = SKEL[style].get('gap', 0.12)
         lines = list(p['core'])
         opt = list(p['opt'])
-        while est_total(lines, p['spk'], SPEED[style], gap) < 28 and opt:
+        while est_total(lines, p['spk'], per_style(SPEED, style, 1.1), gap) < SKEL[style].get('target_s', [28, 36])[0] and opt:
             pos, o = opt.pop(0)
             lines.insert(min(pos, len(lines) - 1), o)
-        while est_total(lines, p['spk'], SPEED[style], gap) > 36 and len(lines) > 5:
+        while est_total(lines, p['spk'], per_style(SPEED, style, 1.1), gap) > SKEL[style].get('target_s', [28, 36])[1] and len(lines) > 5:
             cand = [k for k in range(1, len(lines) - 1) if not lines[k].get('host_audio') and not lines[k].get('title')]
             if not cand:
                 break
@@ -218,14 +245,14 @@ def main():
                 L['wav'] = tts_path(L['text'], p['spk'])
         name = f"b{p['no']}"
         sc = dict(name=name, template="B_信息种草", batch=f"b{a.start}", seed=p['no'], host_pool=HOST_POOL,
-                  style_id=style, 风格=STYLE_NAME[style], speaker=p['spk'], speed=SPEED[style], gap=gap,
-                  music_file=rng.choice(MUSIC[style]), music_vol=SKEL[style].get('music_vol', 0.22),
+                  style_id=style, 风格=STYLE_NAME[style], speaker=p['spk'], speed=per_style(SPEED, style, 1.1), gap=gap,
+                  music_file=rng.choice(per_style(MUSIC, style, [None])), music_vol=SKEL[style].get('music_vol', 0.22),
                   lines=lines)
         if SKEL[style].get('style_override'):
             sc['style'] = SKEL[style]['style_override']
         json.dump(sc, open(f"{R}/脚本/{name}.json", 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
         names.append(name)
-        meta[name] = dict(风格=STYLE_NAME[style], 配音=p['spk'], 预估时长=round(est_total(lines, p['spk'], SPEED[style], gap), 1),
+        meta[name] = dict(风格=STYLE_NAME[style], 配音=p['spk'], 预估时长=round(est_total(lines, p['spk'], per_style(SPEED, style, 1.1), gap), 1),
                           句数=len(lines), 文案=' | '.join(plain(x['text']) for x in lines))
         print(name, STYLE_NAME[style], meta[name]['预估时长'], 's', len(lines), '句', flush=True)
 

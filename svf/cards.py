@@ -126,7 +126,7 @@ def check():
     # 骨架 ↔ 配方卡 双向一致:骨架声明的 cards 必须等于实际用到的;卡的"风格"必须等于用到它的骨架
     import skeleton
     from config import R
-    skel = skeleton.load_all(R)
+    skel = {k: v for k, v in skeleton.load_all(R).items() if os.path.dirname(v['_file']) == skeleton.skeleton_dirs(R)[1].replace('/', os.sep) or os.path.normpath(os.path.dirname(v['_file'])) == os.path.normpath(skeleton.skeleton_dirs(R)[1])}   # 只核对仓库自带骨架
     byname = {c['name']: c for c in cards}
     used_by = {n: set() for n in byname}
     for sid, t in skel.items():

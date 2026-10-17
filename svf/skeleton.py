@@ -188,3 +188,48 @@ def build(tpl, ctx, rng):
             pos = len(core) + (int(at[3:]) if at[3:] else 0) if isinstance(at, str) and at.startswith('end') else int(at)
             opt.append((pos, x))
     return core, opt
+
+
+def requirements(tpl):
+    """骨架需要项目提供什么:文案池名、博主片段、清单理由。用来判断这个项目能不能出这种风格。"""
+    pools, host, reasons = set(), set(), False
+
+    def walk(x):
+        nonlocal reasons
+        if isinstance(x, dict):
+            t = x.get('type', 'line')
+            if t == 'host':
+                host.add(x['clip'])
+            if t == 'reasons':
+                reasons = True
+                pools.add(x['open_pool'])
+            if t == 'montage':
+                pools.update([x['pool'], *x['head_pools'], x['tail_pool']])
+            if 'text' in x and isinstance(x['text'], dict):
+                tx = x['text']
+                if 'pool' in tx:
+                    pools.add(tx['pool'])
+                if 'index' in tx:
+                    pools.add(tx['index'][0])
+                if 'index_choice' in tx:
+                    pools.update(k for k, _ in tx['index_choice'])
+                if 'fallback_pool' in tx:
+                    pools.add(tx['fallback_pool'])
+            for v in x.values():
+                walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+    walk(tpl.get('sequence', []))
+    walk(tpl.get('optional', []))
+    return dict(pools=sorted(pools), host=sorted(host), reasons=reasons)
+
+
+def missing(tpl, pools, host_clips, reasons):
+    """返回这个项目缺什么(空列表 = 能出)。"""
+    r = requirements(tpl)
+    out = [f'文案池 {p}' for p in r['pools'] if not pools.get(p)]
+    out += [f'博主片段 {h}' for h in r['host'] if not host_clips.get(h)]
+    if r['reasons'] and not reasons:
+        out.append('清单理由 reasons')
+    return out

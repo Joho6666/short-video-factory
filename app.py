@@ -198,7 +198,7 @@ with gr.Blocks(title='Short Video Factory') as demo:
         with gr.Row():
             n = gr.Number(value=6, label='条数', precision=0)
             start = gr.Number(value=next_start(), label='起始编号', precision=0)
-            j = gr.Slider(1, 4, value=3, step=1, label='并行条数')
+            j = gr.Slider(1, 3, value=1, step=1, label='并行条数(内存 16GB 建议 1)')
             qc = gr.Slider(0, 1, value=0.2, step=0.1, label='转写抽检比例')
         styles = gr.CheckboxGroup(list(STYLES), value=list(STYLES), label='风格(轮换分配)')
         fps60 = gr.Checkbox(value=True, label='60fps(更流畅,稍慢)')
