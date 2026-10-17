@@ -1,0 +1,46 @@
+{
+ "id": "T1",
+ "name": "口播剪辑",
+ "kind": "talk",
+ "doc": "口播原片 → 去静音/口癖跳切 + 逐词卡拉OK字幕 + 钉在词边界的空镜插画面;不用 TTS,保留真人原声",
+ "cards": [
+  "broll-cutaway",
+  "karaoke-caption",
+  "talk-jumpcut"
+ ],
+ "params": {
+  "max_gap_s": 0.3,
+  "pad_in_s": 0.05,
+  "pad_out_s": 0.08,
+  "jump_zoom": [
+   1.0,
+   1.12
+  ],
+  "broll_every_s": 5.0,
+  "broll_len_s": [
+   1.4,
+   2.2
+  ],
+  "keep_head_s": 2.0,
+  "keep_tail_s": 2.5,
+  "music_vol": 0.1,
+  "caption": {
+   "size": 72,
+   "stroke": 7,
+   "center_y": 1400,
+   "max_chars": 10,
+   "highlight": "#FFE000"
+  },
+  "fillers": [
+   "嗯",
+   "呃",
+   "额",
+   "诶",
+   "欸",
+   "哎",
+   "呃呃",
+   "嗯嗯"
+  ]
+ },
+ "sequence": []
+}

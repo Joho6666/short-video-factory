@@ -10,3 +10,4 @@ pymediainfo
 openpyxl
 gradio>=4
 uiautomation
+jieba

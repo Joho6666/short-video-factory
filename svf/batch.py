@@ -36,7 +36,7 @@ BIG = {'disc': '', 'tuan': '', 'cake': '', 'end': '', **_B.get('big_cards', {})}
 MUSIC = {k: [x.replace('{project}', R) for x in v] for k, v in _B.get('music', {}).items()}
 SPK = _B.get('speakers') or {s: ['zh_male_ad'] for s in ['S1', 'S2', 'S3', 'S4', 'S5']}
 SPEED = _B.get('speed') or {'S1': 1.12, 'S2': 1.2, 'S3': 1.08, 'S4': 1.12, 'S5': 1.1}
-SKEL = skeleton.load_all(R)                                                          # 风格骨架:templates/skeletons/*.json(项目 模板/skeletons 可覆盖)
+SKEL = {k: v for k, v in skeleton.load_all(R).items() if v.get('kind') != 'talk'}                                                          # 风格骨架:templates/skeletons/*.json(项目 模板/skeletons 可覆盖)
 STYLE_NAME = {k: v['name'] for k, v in SKEL.items()}
 HOST_POOL = _B.get('host_pool', [])
 HOST = {k: [tuple(x) for x in v] for k, v in _B.get('host_clips', {}).items()}      # 博主原声:(素材, 起点, 时长, 字幕)

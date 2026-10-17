@@ -29,6 +29,8 @@ def all_cards():
 
 def derive_used(tpl):
     """从骨架里的实际用法推出它用到了哪些配方卡(转场/大字卡/标题/卡点/运镜/字幕)。"""
+    if tpl.get('kind') == 'talk':                      # 口播骨架:固定三张口播卡
+        return {'talk-jumpcut', 'karaoke-caption', 'broll-cutaway'}
     cards = {'caption-bold-outline'}
     nodes = []
 
@@ -62,6 +64,12 @@ def derive_used(tpl):
     if any(m.startswith('pan') for m in pool):
         cards.add('pan-sweep')
     return cards
+
+
+def skeleton_T1_params():
+    from skeleton import load_all
+    from config import R
+    return load_all(R)['T1']['params']
 
 
 def check():
@@ -102,6 +110,17 @@ def check():
             for k in ('size', 'center_y', 'fill', 'stroke', 'stroke_w', 'outer', 'pop'):
                 if p.get(k) != tpl['big_card'].get(k):
                     errs.append(f'{n}: {k} 与模板不一致')
+        if c.get('类别') == 'talk':
+            tp = skeleton_T1_params()
+            for k, v in p.items():
+                if k in tp and tp[k] != v:
+                    errs.append(f'{n}: {k}={v} 与 T1_口播.json 的 {tp[k]} 不一致')
+                if k == 'caption':
+                    pass
+            if n == 'karaoke-caption':
+                for k, v in p.items():
+                    if tp['caption'].get(k) != v:
+                        errs.append(f'{n}: {k} 与 T1_口播.json caption 不一致')
         if n == 'push-in-slow' and p['zoom_in_slow']['amount'] != tpl['shot']['zoom_amount']:
             errs.append(f'{n}: amount 与模板 zoom_amount 不一致')
     # 骨架 ↔ 配方卡 双向一致:骨架声明的 cards 必须等于实际用到的;卡的"风格"必须等于用到它的骨架

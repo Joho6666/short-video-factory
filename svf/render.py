@@ -25,7 +25,7 @@ for _k in ('caption', 'title_sticker', 'big_card', 'shot'):      # 每条脚本�
     if _k in sc.get('style', {}):
         TPL[_k] = {**TPL[_k], **sc['style'][_k]}
 idx = json.load(open(R + '/数据/素材索引.json', encoding='utf-8'))
-BAD = ('路人或儿童正脸', '含明星肖像(版权肖像风险)', '品牌自带折扣牌(与全场2折起不同)', '拍摄者手指入镜', '画面虚焦/构图差', '第二位出镜者正脸', '汉堡节招牌可见(与国庆不符)')
+from risk import BAD
 FPS = int(os.getenv('AVD_FPS', '60'))
 rng = random.Random(sc.get('seed', 1))
 used = {}
