@@ -170,6 +170,12 @@ def run_tag(step):
     yield log[-6000:] + chr(10) + f'完成(退出码 {p.returncode})'
 
 
+def tag_runner(step):
+    def f():
+        yield from run_tag(step)
+    return f
+
+
 # ------------------------------------------------------------------ 口播
 def run_talk(video, script, name, broll, model):
     if not video or not os.path.exists(video):
@@ -313,7 +319,7 @@ with gr.Blocks(title='Short Video Factory') as demo:
             tb4 = gr.Button('写回', variant='primary')
         tglog = gr.Textbox(label='打标日志', lines=10, autoscroll=True)
         for _b, _n in ((tb1, '分镜表'), (tb2, '自动打标'), (tb3, '预演合并'), (tb4, '写回')):
-            _b.click(lambda _n=_n: run_tag(_n), None, tglog)
+            _b.click(tag_runner(_n), None, tglog)
 
 if __name__ == '__main__':
     demo.queue().launch(server_name='127.0.0.1', server_port=7860, inbrowser=False,
