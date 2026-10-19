@@ -281,7 +281,7 @@ def main():
     for k, (s, e) in enumerate(segs):
         zoom = TP['jump_zoom'][k % 2]
         vf = (f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-              + (f"scale={int(1080 * zoom)}:{int(1920 * zoom)},crop=1080:1920," if zoom != 1.0 else '') + f"fps={FPS},format=yuv420p,setsar=1")
+              + (f"scale={int(1080 * zoom)}:{int(1920 * zoom)},crop=1080:1920," if zoom != 1.0 else '') + f"fps={FPS},scale=out_range=tv,format=yuv420p,setsar=1")
         fn = f"{work}/h{k:03d}.mp4"
         jobs.append(([FF, '-v', 'error', '-y', '-ss', f'{s:.3f}', '-t', f'{e - s:.3f}', '-i', a.video, '-vf', vf, '-r', str(FPS)]
                      + enc_args() + ['-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', fn], fn))
@@ -302,7 +302,7 @@ def main():
         n = round((y - x) * FPS)
         z = f"1+0.08*on/{n}"
         vf = (f"fps={FPS},scale=1620:2880:flags=bicubic,zoompan=z='{z}':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s=1080x1920:fps={FPS},"
-              f"format=yuv420p,setsar=1")
+              f"scale=out_range=tv,format=yuv420p,setsar=1")
         run([FF, '-v', 'error', '-y', '-ss', f'{ss:.3f}', '-t', f'{y - x + 0.1:.3f}', '-i', clip_file(idx, k), '-an', '-vf', vf, '-r', str(FPS),
              '-frames:v', str(n)] + enc_args() + [fn])
         brolls.append(dict(clip=k, ss=ss, start=x, end=y, file=fn))

@@ -14,7 +14,7 @@
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import cv2, json, os, sys, shutil, numpy as np
-from config import R
+from config import R, PROJECT
 from risk import BAD
 
 IDX = R + '/数据/素材索引.json'
@@ -118,6 +118,9 @@ def validate(tag):
     errs = []
     if tag.get('shot') not in sc['shot']:
         errs.append(f"shot={tag.get('shot')}")
+    ct = PROJECT.get('content_types')
+    if ct and tag.get('content') not in ct:
+        errs.append(f"content={tag.get('content')}")
     if tag.get('position') not in sc['position']:
         errs.append(f"position={tag.get('position')}")
     if tag.get('quality') not in (1, 2, 3, 4, 5):
@@ -149,7 +152,9 @@ def cmd_apply(files, write):
                 stat['new_risk'] += 1
                 print(f'  新增风险 {lab}: {new}  ({tag.get("note", "")})')
             if write:
-                d[k]['AI标签'] = {x: tag.get(x) for x in ('shot', 'brand', 'quality', 'position', 'risk', 'note')}
+                d[k]['AI标签'] = {x: tag.get(x) for x in ('shot', 'content', 'brand', 'quality', 'position', 'risk', 'note')}
+                if tag.get('content') and d[k].get('内容') in (None, '', '未分类'):
+                    d[k]['内容'] = tag['content']      # 选镜头按"内容"匹配(骨架里的角色经 cat_alias 映射到这里)
                 d[k]['标记'] = list(d[k]['标记']) + new
                 if new:
                     d[k]['AI新增风险'] = new
@@ -167,7 +172,7 @@ PROMPT = """你是素材打标员。请用 Read 工具读取这张分镜表图�
 图里每个素材占 3 格(首/中/尾三帧),左上角黄色文字是素材编号,从上到下、每行 2 个素材。本张共 {n} 个素材,编号依次是:{labels}
 给每个素材打标,字段:
 - shot: {shots} 之一
-- brand: 画面里清楚可见的品牌/店名,没有写空字符串
+{content_line}- brand: 画面里清楚可见的品牌/店名,没有写空字符串
 - quality: 1-5 整数(5=清晰稳定构图好,3=能用,1=糊/抖/构图差/大段废帧)
 - position: {positions} 之一(适合放在片子的哪个位置)
 - risk: 只能从下面这些标签里选(原文照抄),没有就 []:{risks}
@@ -191,11 +196,13 @@ def ask_claude(sheet, labels, model):
     risks = list(BAD)
     help_ = ';'.join(f'{r}={RISK_HELP[r]}' for r in risks if r in RISK_HELP)
     help_ += ';' + ';'.join(f'{r}(按字面理解,画面里出现即标)' for r in risks if r not in RISK_HELP)
-    prompt = PROMPT.format(img=sheet.replace(chr(92), '/'), n=len(labels), labels=', '.join(labels), shots=' / '.join(sc['shot']),
+    ct = PROJECT.get('content_types')
+    content_line = (f"- content: {' / '.join(ct)} 之一(这段素材的主要内容,用来选镜头)" + chr(10) if ct else '')
+    prompt = PROMPT.format(content_line=content_line, img=sheet.replace(chr(92), '/'), n=len(labels), labels=', '.join(labels), shots=' / '.join(sc['shot']),
                            positions=' / '.join(sc['position']), risks=' | '.join(risks), risk_help=help_)
     import shutil
     exe = shutil.which('claude') or 'claude'
-    cmd = [exe, '-p', '--allowedTools', 'Read', '--add-dir', os.path.dirname(sheet)] + (['--model', model] if model else [])
+    cmd = [exe, '-p', '--allowedTools', 'Read', '--disallowedTools', 'Bash,Write,Edit,NotebookEdit,WebFetch,WebSearch,Task,Agent', '--add-dir', os.path.dirname(sheet)] + (['--model', model] if model else [])
     # 桌面 App 会话里的 ANTHROPIC_* / CLAUDE_CODE_* 环境变量会让子进程连错网关(401),清掉后用用户 ~/.claude/settings.json 自己的配置
     env = {k: v for k, v in os.environ.items() if not (k.startswith('ANTHROPIC_') or k.startswith('CLAUDE_CODE_') or k.startswith('CLAUDE_'))}
     r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=os.path.dirname(sheet), timeout=900, env=env)

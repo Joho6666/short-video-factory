@@ -232,7 +232,7 @@ for i, s in enumerate(shots):
     spd_ = s.get('spd', 1.0)
     pre = f"setpts=PTS/{spd_},fps={FPS}," if abs(spd_ - 1.0) > 1e-3 else ''
     jobs.append([FF, '-v', 'error', '-y', '-ss', f"{s['ss']:.3f}", '-t', f"{L_ * spd_:.3f}", '-i', clip_path(s['clip']),
-                 '-an', '-vf', f"fps={FPS}," + pre + vf + ',format=yuv420p,setsar=1', '-r', str(FPS), '-frames:v', str(s['_nf'])] + VENC_MID + [out])
+                 '-an', '-vf', f"fps={FPS}," + pre + vf + ',scale=out_range=tv,format=yuv420p,setsar=1', '-color_range', 'tv', '-r', str(FPS), '-frames:v', str(s['_nf'])] + VENC_MID + [out])
     s['_file'] = out
     s['_len'] = L_
 from concurrent.futures import ThreadPoolExecutor

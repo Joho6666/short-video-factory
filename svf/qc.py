@@ -45,6 +45,9 @@ def norm(t):
     # 一个"数"= 若干(数字+单位)再跟一个可选个位;"五百九百"会被拆成两个数
     t = re.sub(r'(?:[一二两三四五六七八九]?千)?(?:[一二两三四五六七八九]百)?(?:[一二三四五六七八九]?十)?'
                r'(?:[一二三四五六七八九](?![百千十]))?', lambda m: cn2num(m) if m.group(0) and re.search('[十百千]', m.group(0)) else m.group(0), t)
+    # 价格读法:"九块九"/"9块9"/"九元九" → 99(脚本里的 9.9 去掉小数点后也是 99)
+    t = re.sub(r'([零一二两三四五六七八九\d])[块元]([零一二两三四五六七八九\d])',
+               lambda m: ''.join(str(CN[c]) if c in CN else c for c in m.groups()), t)
     return t
 
 
@@ -139,6 +142,8 @@ for n in names:
             f = cv2.resize(f, (216, 384))
             cv2.putText(f, f"{n} {t:.1f}", (4, 18), 0, 0.5, (0, 255, 255), 2)
             fr.append(f)
+    while len(fr) < 16:                      # 个别时间点读帧失败(末尾/编码差异)时补黑帧,不让整份质检崩掉
+        fr.append(np.zeros((384, 216, 3), np.uint8))
     open(f"{R}/成片/_qc_{n}.jpg", 'wb').write(
         cv2.imencode('.jpg', np.vstack([np.hstack(fr[:8]), np.hstack(fr[8:16])]), [cv2.IMWRITE_JPEG_QUALITY, 82])[1].tobytes())
     report[n] = dict(风格=sc.get('风格'), 配音=sc.get('speaker'), 音乐=os.path.basename(sc.get('music_file', ''))[20:],

@@ -43,7 +43,7 @@ def run(j):
     os.makedirs(os.path.dirname(d), exist_ok=True)
     hdr = is_hdr(s)
     vf = (TM + ",scale=1080:1920" if hdr else
-          "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p") + ",fps=60,setsar=1"
+          "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,scale=out_range=tv,format=yuv420p") + ",fps=60,setsar=1"
     r = subprocess.run([FF, '-v', 'error', '-y', '-i', s, '-map', '0:v:0', '-map', '0:a:0?', '-vf', vf,
                         '-c:v', 'h264_nvenc', '-preset', 'p4', '-cq', '19', '-g', '120',
                         '-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '128k', d + '.tmp.mp4'],

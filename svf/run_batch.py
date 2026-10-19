@@ -47,6 +47,17 @@ def one(name, retry=False):
     if chk.stderr.strip():
         say(f"FAIL decode {name}: {chk.stderr[:200]}")
         return
+    # 成片时长必须接近旁白总长:合成中途出错时 ffmpeg 会留下一个能播放但被截断的文件
+    import re as _re
+    want = _re.search(r'旁白总长 ([0-9.]+)', r.stdout)
+    got = _re.search(r'Duration: (\d+):(\d+):([0-9.]+)', subprocess.run([FF, '-i', out], capture_output=True, text=True, errors='ignore').stderr)
+    if want and got:
+        g = int(got.group(1)) * 3600 + int(got.group(2)) * 60 + float(got.group(3))
+        if g < float(want.group(1)) - 1.0:
+            say(f"FAIL truncated {name}: 成片 {g:.1f}s < 旁白 {want.group(1)}s")
+            if not retry:
+                FAILED.append(name)
+            return
     j = subprocess.run([PY, os.path.join(CODE, 'jy_draft.py'), name], capture_output=True, text=True, encoding='utf-8', env=ENV)
     jy = 'draft_ok' if 'draft saved' in j.stdout else 'draft_fail'
     say(f"OK {name} {time.time() - t0:.0f}s {jy}")
